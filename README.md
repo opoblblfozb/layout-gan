@@ -1,5 +1,7 @@
-# MNIST画像を生成するシンプルなGAN
-- こちらのサイトのコードを全面的に使用しています。
-  - https://pystyle.info/pytorch-gan/
-- 元論文
-  - https://arxiv.org/pdf/1406.2661.pdf
+# Layout-gan
+- 元論
+  - https://arxiv.org/abs/1901.06767
+- より詳しいやつ
+  - https://ieeexplore.ieee.org/document/8948239
+- attentionの実装について
+  - https://github.com/The-AI-Summer/self-attention-cv/blob/main/examples/mhsa.py
