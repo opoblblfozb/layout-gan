@@ -1,0 +1,106 @@
+from tqdm import trange
+
+import torch.optim as optim
+import torch.nn as nn
+import torch
+
+from utils.mnistlayout import get_dataloader
+from utils.generator import Generator
+from utils.discriminator import RelationBasedDiscriminator
+
+
+class Trainer:
+    def __init__(
+            self,
+            latent_dim=100,
+            class_num=1,
+            geoparam_num=2,
+            batch_size=128,
+            learning_rate=0.00002,
+            n_epoch=100):
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda", 0)
+        else:
+            self.device = torch.device("cpu")
+        self.real_label = 1
+        self.fake_label = 0
+
+        self.class_num = class_num
+        self.geoparam_num = geoparam_num
+        self.latent_dim = latent_dim
+        self.n_epoch = n_epoch
+        self.batch_size = batch_size
+        lr = learning_rate
+
+        self.dataloader = get_dataloader(batch_size=self.batch_size)
+        self.element_num = self.dataloader.dataset.element_num
+        self.G = Generator(
+            class_num=self.class_num,
+            geoparam_num=self.geoparam_num)
+        self.D = RelationBasedDiscriminator(
+            element_num=self.element_num,
+            class_num=self.class_num,
+            geoparam_num=self.geoparam_num
+        )
+
+        self.criterion = nn.BCELoss()
+        self.G_optimizer = optim.Adam(self.G.parameters(), lr=lr)
+        self.D_optimizer = optim.Adam(self.D.parameters(), lr=lr)
+
+    def exec_train(self):
+        self.G.train()
+        self.D.train()
+
+        for epoch in trange(self.n_epoch, desc="epoch"):
+            D_losses, G_losses = [], []
+            for x in self.dataloader:
+                x = x.to(self.device)
+                D_losses.append(self.D_train(x))
+                G_losses.append(self.G_train(x))
+
+    def generate_z(self):
+        batch = []
+        norm_mean = torch.zeros(self.geoparam_num, dtype=torch.float32)
+        norm_std = torch.ones(self.geoparam_num, dtype=torch.float32)
+        for _ in range(self.batch_size):
+            z = []
+            for _ in range(self.element_num):
+                z.append(torch.cat(
+                    [torch.rand(self.class_num),
+                     torch.normal(mean=norm_mean, std=norm_std)]))
+            batch.append(torch.stack(z, dim=0))
+        return torch.stack(batch, dim=0).to(self.device)
+
+    def D_train(self, x: torch.tensor):
+        self.D.zero_grad()
+
+        # 本物のデータが入力の場合の Discriminator の損失関数を計算する。
+        y_pred = self.D(x)
+        y_real = torch.full_like(y_pred, self.real_label)
+        loss_real = self.criterion(y_pred, y_real)
+
+        # 偽物のデータが入力の場合の Discriminator の損失関数を計算する。
+        z = self.generate_z()
+        y_pred = self.D(self.G(z))
+        y_fake = torch.full_like(y_pred, self.fake_label)
+        loss_fake = self.criterion(y_pred, y_fake)
+
+        loss = loss_real + loss_fake
+        loss.backward()
+        self.D_optimizer.step()
+
+        return float(loss)
+
+    def G_train(self, x: torch.tensor):
+        self.G.zero_grad()
+
+        # 損失関数を計算する。
+        z = self.generate_z()
+        y_pred = self.D(self.G(z))
+        y = torch.full_like(y_pred, self.real_label)
+        loss = self.criterion(y_pred, y)
+
+        loss.backward()
+        self.G_optimizer.step()
+
+        return float(loss)

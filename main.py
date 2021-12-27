@@ -1,4 +1,5 @@
-from utils.train import Trainer
+from utils.train_mnistlayout import Trainer
+
 
 def main():
     trainer = Trainer()

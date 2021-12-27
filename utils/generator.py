@@ -118,7 +118,8 @@ class Generator(nn.Module):
 
         # class_prob = [batch_size, element_num, class_num]
         # geoparam = [batch_size, element_num, geoparam_num]
-        class_prob, geoparam = torch.split(out, self.class_num, dim=2)
+        class_prob, geoparam = torch.split(
+            out, [self.class_num, self.geoparam_num], dim=2)
         if self.class_num == 1:
             class_prob = torch.sigmoid(class_prob)
         else:
