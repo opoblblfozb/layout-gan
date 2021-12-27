@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from self_attention_cv import MultiHeadSelfAttention
+from torch.nn import MultiheadAttention
 
 
 def get_relation_module():
@@ -75,16 +77,56 @@ class Generator(nn.Module):
             nn.Linear(self.feature_num * 4, self.feature_num * 8),
             nn.LeakyReLU(0.2, inplace=True)
         )
-        self.relation = Relation(self.feature_num * 8)
+        # non-local neuralnetworkのところ、一旦multiheadselfattentionで代用
+        # 処理がちょっと若干違うので、要修正
+        self.relation1 = MultiHeadSelfAttention(self.feature_num * 8)
+        self.relu1 = nn.LeakyReLU(0.2, inplace=True)
+        self.relation2 = MultiHeadSelfAttention(self.feature_num * 8)
+        self.relu2 = nn.LeakyReLU(0.2, inplace=True)
+        self.relation3 = MultiHeadSelfAttention(self.feature_num * 8)
+        self.relu3 = nn.LeakyReLU(0.2, inplace=True)
+        self.relation4 = MultiHeadSelfAttention(self.feature_num * 8)
+        self.relu4 = nn.LeakyReLU(0.2, inplace=True)
+
+        self.decoder = nn.Sequential(
+            nn.Linear(self.feature_num * 8, self.feature_num * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(self.feature_num * 4, self.feature_num * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(self.feature_num * 2, self.feature_num),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.geopram_reg = nn.Linear(self.geoparam_num, self.geoparam_num)
 
     def forward(self, x):
         """
         Args:
             x (torch.tensor): [batch_size, element_num,  feature_num]
         """
-        out = self.encoder(x)  # [batch_size, element_num, embedding_num]
-        out = self.relation(out)  # [batch_size, element_num, embeddng_num]
+        # [batch_size, element_num, embedding_num]
+        out = self.encoder(x)
 
+        # [batch_size, element_num, embeddng_num]
+        relation_out = self.relation1(out)
+        out = self.relu1(out + relation_out)
+        relation_out = self.relation2(out)
+        out = self.relu2(out + relation_out)
+        relation_out = self.relation3(out)
+        out = self.relu3(out + relation_out)
+        relation_out = self.relation4(out)
+        out = self.relu4(out + relation_out)
+        out = self.decoder(out)
+
+        # class_prob = [batch_size, element_num, class_num]
+        # geoparam = [batch_size, element_num, geoparam_num]
+        class_prob, geoparam = torch.split(out, self.class_num, dim=2)
+        if self.class_num == 1:
+            class_prob = torch.sigmoid(class_prob)
+        else:
+            class_prob = nn.Softmax(dim=2)(class_prob)
+        geoparam = self.geopram_reg(geoparam)
+        # [batch_size, element_num, class_num + geoparam_num]
+        out = torch.cat((class_prob, geoparam), dim=2)
         return out
 
 
@@ -94,13 +136,6 @@ if __name__ == "__main__":
     feature_num = 4
     dummy_input = torch.randn(batch_size, element_num, feature_num)
     model = Generator(class_num=2, geoparam_num=2)
-    torch.onnx.export(
-        model,
-        dummy_input,
-        "./test/generator.onnx",
-        verbose=True,
-        input_names=["input"],
-        output_names=["output"])
     writer = SummaryWriter(log_dir="./test/generator_model")
     writer.add_graph(model, input_to_model=dummy_input, verbose=True)
     writer.close()
