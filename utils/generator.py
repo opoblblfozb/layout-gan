@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from self_attention_cv import MultiHeadSelfAttention
-from torch.nn import MultiheadAttention
 
 
 def get_relation_module():
