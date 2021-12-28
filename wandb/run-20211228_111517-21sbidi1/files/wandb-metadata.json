@@ -1,0 +1,22 @@
+{
+    "os": "macOS-11.6-x86_64-i386-64bit",
+    "python": "3.9.8",
+    "heartbeatAt": "2021-12-28T02:15:18.606867",
+    "startedAt": "2021-12-28T02:15:17.643589",
+    "docker": null,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/k.nonaka/sandbox/layout-gan/main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "git@github.com:opoblblfozb/layout-gan.git",
+        "commit": "e64ce847e1b67628718ebfd3d8a4573ec918f5bb"
+    },
+    "email": "k.nonaka@opt.ne.jp",
+    "root": "/Users/k.nonaka/sandbox/layout-gan",
+    "host": "64-14864",
+    "username": "k.nonaka",
+    "executable": "/Users/k.nonaka/sandbox/layout-gan/.venv/bin/python"
+}

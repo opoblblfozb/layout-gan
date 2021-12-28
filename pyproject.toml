@@ -15,6 +15,7 @@ torchvision = "^0.11.2"
 tensorboard = "^2.7.0"
 self-attention-cv = "^1.2.3"
 rich = "^10.16.1"
+wandb = "^0.12.9"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

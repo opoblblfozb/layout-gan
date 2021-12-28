@@ -1,0 +1,16 @@
+
+epoch:   0%|                                                            | 0/100 [13:22<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/k.nonaka/sandbox/layout-gan/main.py", line 10, in <module>
+    main()
+  File "/Users/k.nonaka/sandbox/layout-gan/main.py", line 6, in main
+    trainer.exec_train()
+  File "/Users/k.nonaka/sandbox/layout-gan/utils/train_mnistlayout.py", line 64, in exec_train
+    G_losses.append(self.G_train())
+  File "/Users/k.nonaka/sandbox/layout-gan/utils/train_mnistlayout.py", line 117, in G_train
+    loss.backward()
+  File "/Users/k.nonaka/sandbox/layout-gan/.venv/lib/python3.9/site-packages/torch/_tensor.py", line 307, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/Users/k.nonaka/sandbox/layout-gan/.venv/lib/python3.9/site-packages/torch/autograd/__init__.py", line 154, in backward
+    Variable._execution_engine.run_backward(
+KeyboardInterrupt
