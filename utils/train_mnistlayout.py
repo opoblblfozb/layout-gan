@@ -46,6 +46,8 @@ class Trainer:
             class_num=self.class_num,
             geoparam_num=self.geoparam_num
         )
+        self.G.to(self.device)
+        self.D.to(self.device)
 
         self.criterion = nn.BCELoss()
         self.G_optimizer = optim.Adam(self.G.parameters(), lr=lr)
