@@ -95,7 +95,14 @@ class Generator(nn.Module):
             nn.Linear(self.feature_num * 2, self.feature_num),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.geopram_reg = nn.Linear(self.geoparam_num, self.geoparam_num)
+        self.class_branch = nn.Sequential(
+            nn.Linear(self.class_num, self.class_num),
+            nn.Sigmoid()
+        )
+        self.geoparam_branch = nn.Sequential(
+            nn.Linear(self.geoparam_num, self.geoparam_num),
+            nn.Sigmoid()
+        )
 
     def forward(self, x):
         """
@@ -120,11 +127,9 @@ class Generator(nn.Module):
         # geoparam = [batch_size, element_num, geoparam_num]
         class_prob, geoparam = torch.split(
             out, [self.class_num, self.geoparam_num], dim=2)
-        if self.class_num == 1:
-            class_prob = torch.sigmoid(class_prob)
-        else:
-            class_prob = nn.Softmax(dim=2)(class_prob)
-        geoparam = self.geopram_reg(geoparam)
+        class_prob = self.class_branch(class_prob)
+        geoparam = self.geoparam_branch(geoparam)
+
         # [batch_size, element_num, class_num + geoparam_num]
         out = torch.cat((class_prob, geoparam), dim=2)
         return out
