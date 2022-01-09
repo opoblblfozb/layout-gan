@@ -20,7 +20,8 @@ class Trainer:
             geoparam_num=2,
             batch_size=128,
             learning_rate=0.00002,
-            n_epoch=100):
+            n_epoch=100,
+            logging=True):
         if torch.cuda.is_available():
             self.device = torch.device("cuda", 0)
         else:
@@ -52,7 +53,9 @@ class Trainer:
         self.criterion = nn.BCELoss()
         self.G_optimizer = optim.Adam(self.G.parameters(), lr=lr)
         self.D_optimizer = optim.Adam(self.D.parameters(), lr=lr)
-        self.run = get_wandb({"group": "train_mnist"})
+        self.logging = logging
+        if logging:
+            self.run = get_wandb({"group": "train_mnist"})
 
     def exec_train(self):
         self.G.train()
